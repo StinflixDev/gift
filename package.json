@@ -1,0 +1,11 @@
+{
+  "name": "gift",
+  "version": "1.0.0",
+  "description": "Cute",
+  "scripts": {
+    "test": "echo \"No tests configured\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

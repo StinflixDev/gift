@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>❤️❤️❤️</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="pageLoader" class="page-loader" role="status" aria-live="polite">
+      <div class="page-loader__card">
+        <p id="pageLoaderBadge" class="page-loader__badge">Loading</p>
+        <p id="pageLoaderText" class="page-loader__text">Preparing a surprise…</p>
+        <div class="page-loader__track" aria-hidden="true">
+          <span id="pageLoaderBar" class="page-loader__bar"></span>
+        </div>
+      </div>
+    </div>
+
+    <main class="card">
+      <div class="card-top">
+        <p class="badge">Happy Valentine’s Day</p>
+        <div id="localeControls" class="locale-controls" aria-label="Localization" aria-hidden="true" hidden>
+          <button type="button" class="locale-btn" data-locale="ua" aria-pressed="false">UA</button>
+          <button type="button" class="locale-btn" data-locale="en" aria-pressed="true">EN</button>
+          <button type="button" class="locale-btn" data-locale="fn" aria-pressed="false">FN</button>
+        </div>
+      </div>
+      <h1>You are my favorite person 💕</h1>
+
+      <section class="reasons" aria-label="Reasons why I love you">
+        <h2>Why I Love You</h2>
+        <ul>
+          <li>Your smile makes my day brighter.</li>
+          <li>You are my little cutie.</li>
+          <li>You inspire me to be better.</li>
+          <li>Everything feels special with you.</li>
+        </ul>
+      </section>
+
+      <section class="quiz is-locked" aria-label="Quiz about us" aria-hidden="true">
+        <p id="quizProgress" class="quiz-progress"></p>
+        <p class="quiz-question">How long have we known each other?</p>
+        <div class="quiz-answers" id="quizAnswers"></div>
+        <p id="quizResult" class="quiz-result" aria-live="polite"></p>
+        <button id="quizNextBtn" class="quiz-next-btn is-invisible" type="button" aria-hidden="true">
+          Next question →
+        </button>
+        <p id="finalLoveText" class="final-love-text" aria-live="polite" hidden></p>
+        <p id="nowPlayingTrack" class="now-playing-track" aria-live="polite" hidden></p>
+        <div id="finalBunnies" class="final-bunnies" aria-hidden="true" hidden>
+          <div class="bunny bunny--orange">
+            <span class="bunny-name">Anton</span>
+            <span class="bunny-ear bunny-ear--left"></span>
+            <span class="bunny-ear bunny-ear--right"></span>
+            <span class="bunny-head"></span>
+            <span class="bunny-nose"></span>
+            <span class="bunny-body"></span>
+          </div>
+          <div class="bunny bunny--pink">
+            <span class="bunny-name">Henrika</span>
+            <span class="bunny-ear bunny-ear--left"></span>
+            <span class="bunny-ear bunny-ear--right"></span>
+            <span class="bunny-head"></span>
+            <span class="bunny-nose"></span>
+            <span class="bunny-body"></span>
+          </div>
+        </div>
+        <div id="bunnyPlayerControls" class="bunny-player" aria-hidden="true" hidden>
+          <div class="bunny-player__row">
+            <button id="bunnyPlayerPrevBtn" class="bunny-player__btn" type="button" aria-label="Previous track">⏮</button>
+            <button id="bunnyPlayerPauseBtn" class="bunny-player__btn" type="button" aria-label="Pause">⏸</button>
+            <button id="bunnyPlayerNextBtn" class="bunny-player__btn" type="button" aria-label="Next track">⏭</button>
+            <button id="bunnyPlayerRepeatBtn" class="bunny-player__btn bunny-player__btn--repeat" type="button" aria-label="Enable repeat track">⟳</button>
+            <input
+              id="bunnyPlayerVolume"
+              class="bunny-player__volume"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="65"
+              aria-label="Track volume"
+            />
+          </div>
+          <button id="bunnyPlayerShushBtn" class="bunny-player__btn bunny-player__btn--shush" type="button" aria-label="Toggle idle bunny speech">Shush ♡</button>
+        </div>
+      </section>
+
+      <button id="bunnyShortcutBtn" class="bunny-shortcut-btn" type="button" aria-hidden="true" hidden>
+        Bunnies 🐰
+      </button>
+    </main>
+
+    <div class="hearts" aria-hidden="true"></div>
+    <div id="flashOverlay" class="flash-overlay" aria-hidden="true"></div>
+
+    <script src="js/state.js"></script>
+    <script src="js/audio-localization.js"></script>
+    <script src="js/flow.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
