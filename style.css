@@ -104,6 +104,7 @@ body {
   inset: 0 auto 0 0;
   width: 100%;
   border-radius: inherit;
+  overflow: hidden;
   transform-origin: left center;
   transform: scaleX(0);
   background: linear-gradient(90deg, #ff6da0, #ff9fbb 56%, #ff6da0);
@@ -113,9 +114,12 @@ body {
 .page-loader__bar::after {
   content: "";
   position: absolute;
-  inset: -35% -14%;
+  inset: 0;
+  left: -40%;
+  width: 38%;
   background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
-  animation: loader-shine 1000ms linear infinite;
+  transform: skewX(-18deg);
+  animation: loader-shine 1100ms linear infinite;
 }
 
 .card-top {
@@ -951,6 +955,36 @@ body.bunnies-ending-mode {
   contain: layout paint;
 }
 
+.tap-burst-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 26;
+}
+
+.tap-burst {
+  position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.tap-burst__line {
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: var(--tap-length, 16px);
+  height: 2px;
+  border-radius: 999px;
+  opacity: 0;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgba(255, 104, 168, 1), rgba(255, 166, 202, 0.72), rgba(255, 255, 255, 0));
+  box-shadow: 0 0 8px rgba(255, 104, 168, 0.4);
+  will-change: transform, opacity;
+  animation: tap-burst-line var(--tap-duration, 460ms) cubic-bezier(0.16, 0.78, 0.24, 1) var(--tap-delay, 0ms) forwards;
+}
+
 .flash-overlay {
   position: fixed;
   inset: 0;
@@ -1096,11 +1130,27 @@ body.reduced-motion .heart {
 
 @keyframes loader-shine {
   0% {
-    transform: translateX(-65%);
+    transform: translateX(-170%) skewX(-18deg);
   }
 
   100% {
-    transform: translateX(65%);
+    transform: translateX(370%) skewX(-18deg);
+  }
+}
+
+@keyframes tap-burst-line {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--tap-angle, 0deg)) translateX(0) scaleX(0.35);
+  }
+
+  18% {
+    opacity: 0.96;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(var(--tap-angle, 0deg)) translateX(var(--tap-distance, 38px)) scaleX(1);
   }
 }
 

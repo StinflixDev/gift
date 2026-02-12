@@ -2,6 +2,8 @@ const pageLoader = document.getElementById("pageLoader");
 const pageLoaderBadge = document.getElementById("pageLoaderBadge");
 const pageLoaderText = document.getElementById("pageLoaderText");
 const pageLoaderBar = document.getElementById("pageLoaderBar");
+let tapBurstLayer = null;
+let tapBurstEffectBound = false;
 
 function finishPageLoader() {
   if (!pageLoader) {
@@ -83,6 +85,86 @@ function createLoaderTasks() {
   return [...imageTasks, ...audioTasks];
 }
 
+function ensureTapBurstLayer() {
+  if (tapBurstLayer && tapBurstLayer.isConnected) {
+    return tapBurstLayer;
+  }
+
+  tapBurstLayer = document.createElement("div");
+  tapBurstLayer.className = "tap-burst-layer";
+  tapBurstLayer.setAttribute("aria-hidden", "true");
+  document.body.appendChild(tapBurstLayer);
+  return tapBurstLayer;
+}
+
+function spawnTapBurst(clientX, clientY) {
+  const layer = ensureTapBurstLayer();
+  const burst = document.createElement("div");
+  const burstCount = isReducedMotionPreferred ? 6 : hasCoarsePointer ? 8 : 10;
+  const maxDelayMs = isReducedMotionPreferred ? 40 : 80;
+  let maxLifetimeMs = 0;
+
+  burst.className = "tap-burst";
+  burst.style.left = `${clientX}px`;
+  burst.style.top = `${clientY}px`;
+
+  for (let index = 0; index < burstCount; index += 1) {
+    const line = document.createElement("span");
+    const baseAngle = (360 / burstCount) * index;
+    const angleJitter = (Math.random() - 0.5) * (isReducedMotionPreferred ? 12 : 20);
+    const angleDeg = baseAngle + angleJitter;
+    const distancePx = isReducedMotionPreferred ? 24 + Math.random() * 16 : 32 + Math.random() * 28;
+    const lengthPx = isReducedMotionPreferred ? 12 + Math.random() * 5 : 14 + Math.random() * 8;
+    const durationMs = isReducedMotionPreferred ? 300 + Math.random() * 120 : 360 + Math.random() * 180;
+    const delayMs = Math.random() * maxDelayMs;
+
+    line.className = "tap-burst__line";
+    line.style.setProperty("--tap-angle", `${angleDeg}deg`);
+    line.style.setProperty("--tap-distance", `${distancePx.toFixed(1)}px`);
+    line.style.setProperty("--tap-length", `${lengthPx.toFixed(1)}px`);
+    line.style.setProperty("--tap-duration", `${durationMs.toFixed(0)}ms`);
+    line.style.setProperty("--tap-delay", `${delayMs.toFixed(0)}ms`);
+    burst.appendChild(line);
+
+    const lifetimeMs = durationMs + delayMs;
+    if (lifetimeMs > maxLifetimeMs) {
+      maxLifetimeMs = lifetimeMs;
+    }
+  }
+
+  layer.appendChild(burst);
+  window.setTimeout(() => {
+    burst.remove();
+  }, Math.ceil(maxLifetimeMs + 60));
+}
+
+function setupTapBurstEffect() {
+  if (tapBurstEffectBound) {
+    return;
+  }
+
+  tapBurstEffectBound = true;
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (event.button !== undefined && event.button !== 0) {
+        return;
+      }
+
+      if (activeBunnyDrag !== null) {
+        return;
+      }
+
+      if (event.target instanceof Element && event.target.closest("input[type='range']")) {
+        return;
+      }
+
+      spawnTapBurst(event.clientX, event.clientY);
+    },
+    { passive: true }
+  );
+}
+
 function simulatePageLoading() {
   if (!pageLoader || !pageLoaderText || !pageLoaderBar) {
     return Promise.resolve();
@@ -106,9 +188,17 @@ function simulatePageLoading() {
   return new Promise((resolve) => {
     const startTs = performance.now();
     let completedTasks = 0;
+    const progressAnimationDurationMs = isReducedMotionPreferred ? 120 : 320;
+    let targetProgress = 0;
+    let renderedProgress = 0;
+    let animationFrameId = null;
+    let animationStartedAt = 0;
+    let animationFrom = 0;
+
+    const clampProgress = (value) => Math.max(0, Math.min(1, value));
 
     const renderProgress = (rawProgress, isComplete = false) => {
-      const clampedProgress = Math.max(0, Math.min(1, rawProgress));
+      const clampedProgress = clampProgress(rawProgress);
       const easedProgress = isComplete ? 1 : 1 - Math.pow(1 - clampedProgress, 2.2);
       const stepIndex = Math.min(loadingSteps.length - 1, Math.floor(clampedProgress * loadingSteps.length));
       const progressPercent = isComplete ? 100 : Math.min(99, Math.max(0, Math.round(clampedProgress * 100)));
@@ -117,8 +207,64 @@ function simulatePageLoading() {
       pageLoaderText.textContent = `${stepText} ${progressPercent}%`;
     };
 
+    const stopProgressAnimation = () => {
+      if (animationFrameId === null) {
+        return;
+      }
+
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+      animationStartedAt = 0;
+    };
+
+    const renderProgressImmediately = (rawProgress, isComplete = false) => {
+      stopProgressAnimation();
+      renderedProgress = clampProgress(rawProgress);
+      targetProgress = renderedProgress;
+      renderProgress(renderedProgress, isComplete);
+    };
+
+    const animateProgress = (timestamp) => {
+      if (animationStartedAt === 0) {
+        animationStartedAt = timestamp;
+      }
+
+      const elapsedMs = timestamp - animationStartedAt;
+      const linearT = Math.min(1, elapsedMs / progressAnimationDurationMs);
+      const easedT = 1 - Math.pow(1 - linearT, 3);
+      renderedProgress = animationFrom + (targetProgress - animationFrom) * easedT;
+      renderProgress(renderedProgress, false);
+
+      if (linearT < 1) {
+        animationFrameId = window.requestAnimationFrame(animateProgress);
+        return;
+      }
+
+      renderedProgress = targetProgress;
+      renderProgress(renderedProgress, renderedProgress >= 1);
+      animationFrameId = null;
+      animationStartedAt = 0;
+    };
+
+    const setProgressTarget = (rawProgress) => {
+      const nextTarget = clampProgress(rawProgress);
+      if (nextTarget <= targetProgress) {
+        return;
+      }
+
+      targetProgress = nextTarget;
+      animationFrom = renderedProgress;
+      animationStartedAt = 0;
+
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      animationFrameId = window.requestAnimationFrame(animateProgress);
+    };
+
     const finishLoading = () => {
-      renderProgress(1, true);
+      renderProgressImmediately(1, true);
       const finishDelayMs = isReducedMotionPreferred ? 70 : 180;
       window.setTimeout(() => {
         finishPageLoader();
@@ -126,7 +272,7 @@ function simulatePageLoading() {
       }, finishDelayMs);
     };
 
-    renderProgress(0);
+    renderProgressImmediately(0);
 
     if (totalTasks === 0) {
       window.setTimeout(finishLoading, minDurationMs);
@@ -135,7 +281,7 @@ function simulatePageLoading() {
 
     const onTaskSettled = () => {
       completedTasks += 1;
-      renderProgress(completedTasks / totalTasks);
+      setProgressTarget(completedTasks / totalTasks);
 
       if (completedTasks < totalTasks) {
         return;
@@ -155,6 +301,7 @@ function simulatePageLoading() {
 }
 
 function initializeApp() {
+  setupTapBurstEffect();
   setupHeartFlowVisibilityHandling();
   startHeartFlow();
   setupBackgroundMusic();
