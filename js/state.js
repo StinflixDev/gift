@@ -389,10 +389,15 @@ const defaultMusicVolume = 0.65;
 const bunnyRadioFirstTrackSrc = "audio/Cults - You and Me.mp3";
 const bunnyRadioTrackSources = [
   bunnyRadioFirstTrackSrc,
+  "audio/A Forest Mighty Black - Till The End.mp3",
+  "audio/Arlo, fkblnde - Full Moon Eyes.mp3",
+  "audio/Clams Casino - The World Needs Change.mp3",
   "audio/Crumb - Ghostride.mp3",
+  "audio/Current Joys - My Blueberry Life.mp3",
+  "audio/Flawed Mangoes - Riff 2.mp3",
   "audio/Hotel Ugly - I Think I Left the Stove On.mp3",
-  "audio/Till the End.mp3",
-  "audio/vhs ghost - u and i.mp3"
+  "audio/vhs ghost - u and i.mp3",
+  "audio/Zereu Genzales - Where You At.mp3"
 ];
 const initialBackgroundTrackSrc = "audio/vhs ghost - u and i.mp3";
 let activeMusicTrack = new Audio();

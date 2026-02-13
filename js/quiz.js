@@ -224,7 +224,17 @@ function spawnSingleNumberedFileAtPoint(clientX, clientY) {
 
 const bunnyTapSpawnMaxDurationMs = 240;
 const bunnyTapSpawnMaxMovePx = 10;
+const bunnyTapSpawnHoldDelayMs = bunnyTapSpawnMaxDurationMs + 20;
 let bunnyTapSpawnGesture = null;
+
+function clearBunnyTapSpawnHoldTimer(gesture) {
+  if (!gesture || gesture.holdTimerId === null) {
+    return;
+  }
+
+  clearTimeout(gesture.holdTimerId);
+  gesture.holdTimerId = null;
+}
 
 function isBunnyTapSpawnBlockedTarget(target) {
   if (!(target instanceof Element)) {
@@ -249,9 +259,26 @@ function onBunnyScreenPointerDown(event) {
     pointerId: event.pointerId,
     startX: event.clientX,
     startY: event.clientY,
+    lastX: event.clientX,
+    lastY: event.clientY,
     startedAt: Date.now(),
-    moved: false
+    moved: false,
+    spawnedByHold: false,
+    holdTimerId: null
   };
+
+  bunnyTapSpawnGesture.holdTimerId = window.setTimeout(() => {
+    if (!bunnyTapSpawnGesture || bunnyTapSpawnGesture.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (!isBunnyEndingMode || bunnyTapSpawnGesture.moved || bunnyTapSpawnGesture.spawnedByHold) {
+      return;
+    }
+
+    bunnyTapSpawnGesture.spawnedByHold = true;
+    spawnSingleNumberedFileAtPoint(bunnyTapSpawnGesture.lastX, bunnyTapSpawnGesture.lastY);
+  }, bunnyTapSpawnHoldDelayMs);
 }
 
 function onBunnyScreenPointerMove(event) {
@@ -261,8 +288,12 @@ function onBunnyScreenPointerMove(event) {
 
   const deltaX = event.clientX - bunnyTapSpawnGesture.startX;
   const deltaY = event.clientY - bunnyTapSpawnGesture.startY;
+  bunnyTapSpawnGesture.lastX = event.clientX;
+  bunnyTapSpawnGesture.lastY = event.clientY;
+
   if (Math.hypot(deltaX, deltaY) > bunnyTapSpawnMaxMovePx) {
     bunnyTapSpawnGesture.moved = true;
+    clearBunnyTapSpawnHoldTimer(bunnyTapSpawnGesture);
   }
 }
 
@@ -276,8 +307,10 @@ function onBunnyScreenPointerUp(event) {
     isBunnyEndingMode &&
     !bunnyTapSpawnGesture.moved &&
     elapsedMs <= bunnyTapSpawnMaxDurationMs &&
+    !bunnyTapSpawnGesture.spawnedByHold &&
     !isBunnyTapSpawnBlockedTarget(event.target);
 
+  clearBunnyTapSpawnHoldTimer(bunnyTapSpawnGesture);
   bunnyTapSpawnGesture = null;
 
   if (!shouldSpawn) {
@@ -292,6 +325,7 @@ function onBunnyScreenPointerCancel(event) {
     return;
   }
 
+  clearBunnyTapSpawnHoldTimer(bunnyTapSpawnGesture);
   bunnyTapSpawnGesture = null;
 }
 
